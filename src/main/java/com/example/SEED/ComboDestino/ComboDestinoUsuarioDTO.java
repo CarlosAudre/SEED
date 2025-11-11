@@ -8,5 +8,6 @@ public record ComboDestinoUsuarioDTO(
         String nomeCombo,
         Long setorId,
         String nomeSetor,
-        LocalDateTime dataEnvio
+        LocalDateTime dataEnvio,
+        LocalDateTime dataFim
 ) {}

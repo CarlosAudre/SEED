@@ -12,6 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -48,19 +49,45 @@ public class ComboDestinoUsuarioService {
                         + " combo.id=" + (cd.getCombo() != null ? cd.getCombo().getId() : "null")
                         + " setor.id=" + (cd.getSetor() != null ? cd.getSetor().getId() : "null")
                         + " ativo=" + cd.getAtivo()
-        ));
+        )); //Essa parte é só para mostrar no log, caso dê erro
+
+
+        combos.sort((a, b) -> {
+            LocalDateTime aData = (a.getCompetencia() != null)
+                    ? a.getCompetencia().getDataFim()
+                    : a.getDataEnvio();
+
+            LocalDateTime bData = (b.getCompetencia() != null)
+                    ? b.getCompetencia().getDataFim()
+                    : b.getDataEnvio();
+
+            // ordena do mais recente (prazo mais distante) pro mais próximo
+            if (aData == null && bData == null) return 0;
+            if (aData == null) return 1;
+            if (bData == null) return -1;
+            return aData.compareTo(bData);
+        });
+
 
         return combos.stream()
-                .map(cd -> new ComboDestinoUsuarioDTO(
-                        cd.getId(),
-                        cd.getCombo() != null ? cd.getCombo().getId() : null,
-                        cd.getCombo() != null ? cd.getCombo().getNomeCombo() : null,
-                        cd.getSetor() != null ? cd.getSetor().getId() : null,
-                        cd.getSetor() != null ? cd.getSetor().getNome() : null,
-                        cd.getDataEnvio()
-                ))
+                .map(cd -> {
+                    LocalDateTime dataFim = null;
+                    if (cd.getCompetencia() != null) {
+                        dataFim = cd.getCompetencia().getDataFim();
+                    }
+                    return new ComboDestinoUsuarioDTO(
+                            cd.getId(),
+                            cd.getCombo() != null ? cd.getCombo().getId() : null,
+                            cd.getCombo() != null ? cd.getCombo().getNomeCombo() : null,
+                            cd.getSetor() != null ? cd.getSetor().getId() : null,
+                            cd.getSetor() != null ? cd.getSetor().getNome() : null,
+                            cd.getDataEnvio(),
+                            dataFim
+                    );
+                })
                 .toList();
     }
+
 
 
     public List<ItemDTO> listarItensDoCombo(Long comboId) {
